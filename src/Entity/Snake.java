@@ -10,14 +10,15 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import Main.GamePanel;
+import java.util.ArrayList;
 
 public class Snake extends Entity implements KeyListener
 {
     Random random = new Random();
-    private int xPos = random.nextInt(Main.WIDTH - GamePanel.TILESIZE);
-    private int yPos = random.nextInt(Main.HEIGHT - GamePanel.TILESIZE);
+    private int xPos = random.nextInt(Main.WIDTH - GamePanel.IMAGESIZE);
+    private int yPos = random.nextInt(Main.HEIGHT - GamePanel.IMAGESIZE);
     
-    private int size = 1;
+    private int size = 2;
     private final int speed = 1;
     
     Image snakeLeftImage = new ImageIcon("src/Images/head_left.png").getImage();
@@ -25,26 +26,42 @@ public class Snake extends Entity implements KeyListener
     Image snakeUpImage = new ImageIcon("src/Images/head_up.png").getImage();
     Image snakeDownImage = new ImageIcon("src/Images/head_down.png").getImage();
     
+    Image tailLeftImage = new ImageIcon("src/Images/tail_left.png").getImage();
+    Image tailRightImage = new ImageIcon("src/Images/tail_right.png").getImage();
+    Image tailUpImage = new ImageIcon("src/Images/tail_up.png").getImage();
+    Image tailDownImage = new ImageIcon("src/Images/tail_down.png").getImage();
+    
+    Image bodyVerticalImage = new ImageIcon("src/Images/body_vertical.png").getImage();
+    Image bodyHorizontalImage = new ImageIcon("src/Images/body_horizontal.png").getImage();
+    
+    ArrayList<SnakeBodyPart> snakeBody = new ArrayList<>();
+    
     boolean movingLeft;
     boolean movingRight = true;
     boolean movingUp;
     boolean movingDown;
     
     GamePanel panel;
+    Fruit fruit;
     
     int score = 0;
     
-    public Snake(GamePanel panel)
+    public Snake(GamePanel panel, Fruit fruit)
     {
         super.setXPos(xPos);
         super.setYPos(yPos);
-        this.image = snakeRightImage;
+        super.image = snakeRightImage;
+        
+        snakeBody.add(score, new SnakeBodyPart(xPos - GamePanel.IMAGESIZE, yPos, tailLeftImage));
 
         this.panel = panel;
+        this.fruit = fruit;
     }
     public void draw(Graphics2D g2)
     {
-        g2.drawImage(image, getXPos(), getYPos(), getWidth(), getHeight(), null);
+        g2.drawImage(image, getXPos(), getYPos(), getWidth(), getHeight(), null); // The head
+        for (SnakeBodyPart part : snakeBody) // The body
+            g2.drawImage(part.getImage(), part.getXPos(), part.getYPos(), part.getWidth(), part.getHeight(), null);
     }
     public void update()
     {
@@ -54,6 +71,7 @@ public class Snake extends Entity implements KeyListener
     }
     private void move()
     {
+        // Moving the head
         if (movingLeft)
             changeXPos(-speed);
         else if (movingRight)
@@ -62,6 +80,27 @@ public class Snake extends Entity implements KeyListener
             changeYPos(-speed);
         else if (movingDown)
             changeYPos(speed);
+        // Moving the body
+        moveBody();
+    }
+    void moveBody()
+    {
+        int size = snakeBody.size();
+        for (int i = 0; i < size; i++)
+        {
+            if (i == size - 1)
+            {
+                SnakeBodyPart part = snakeBody.get(i);
+                part.setXPos(getXPos() - GamePanel.IMAGESIZE);
+                part.setYPos((getYPos()));
+                break;
+            }
+            SnakeBodyPart previousPart = snakeBody.get(i);
+            SnakeBodyPart nextPart = snakeBody.get(i + 1);
+            
+            previousPart.setXPos(nextPart.getXPos() - GamePanel.IMAGESIZE);
+            previousPart.setYPos(nextPart.getYPos());
+        }
     }
     private void checkForCollision()
     {
@@ -79,20 +118,24 @@ public class Snake extends Entity implements KeyListener
         int xPos = getXPos();
         int yPos = getYPos();
         
-        int fruitXPos = GamePanel.fruit.getXPos();
-        int fruitYPos = GamePanel.fruit.getYPos();
-        int fruitWidth = GamePanel.fruit.getWidth();
-        int fruitHeight = GamePanel.fruit.getHeight();
+        int fruitXPos = fruit.getXPos();
+        int fruitYPos = fruit.getYPos();
+        int fruitWidth = fruit.getWidth();
+        int fruitHeight = fruit.getHeight();
         
         if ((xPos >= fruitXPos && xPos <= fruitXPos + fruitWidth) 
                 && (yPos >= fruitYPos && yPos < fruitYPos + fruitHeight))
         {
-            score++;
+            growSnakeBody();
             size++;
-            GamePanel.fruit.setXPos(random.nextInt(Main.WIDTH - fruitWidth));
-            GamePanel.fruit.setYPos(random.nextInt(Main.HEIGHT - fruitHeight));
-            System.out.println("Consumed");
+            fruit.respawn();
         }
+    }
+    void growSnakeBody()
+    {
+         SnakeBodyPart tail = snakeBody.get(0);
+         tail.setXPos(tail.getXPos() - GamePanel.IMAGESIZE);
+         snakeBody.add(++score, new SnakeBodyPart(tail.getXPos() + GamePanel.IMAGESIZE, tail.getYPos(), bodyHorizontalImage));   
     }
     public int getScore()
     {
@@ -106,44 +149,43 @@ public class Snake extends Entity implements KeyListener
     @Override
     public void keyPressed(KeyEvent ke) 
     {
-        switch (ke.getKeyChar()) 
+        char key = ke.getKeyChar();
+
+        if (key == 'w' && !movingDown) 
         {
-            case 'w' ->
-            {
-                movingUp = true;
-                movingDown = false;
-                movingLeft = false;
-                movingRight = false;
-                
-                image = snakeUpImage;
-            }
-            case 'a' -> 
-            {
-                movingUp = false;
-                movingDown = false;
-                movingLeft = true;
-                movingRight = false;
-                
-                image = snakeLeftImage;
-            }
-            case 's' -> 
-            {
-                movingUp = false;
-                movingDown = true;
-                movingLeft = false;
-                movingRight = false;
-                
-                image = snakeDownImage;
-            }
-            case 'd' -> 
-            {
-                movingUp = false;
-                movingDown = false;
-                movingLeft = false;
-                movingRight = true;
-                
-                image = snakeRightImage;
-            }
+            movingUp = true;
+            movingDown = false;
+            movingLeft = false;
+            movingRight = false;
+    
+            image = snakeUpImage;
+        } 
+        else if (key == 'a' && !movingRight) 
+        {
+            movingUp = false;
+            movingDown = false;
+            movingLeft = true;
+            movingRight = false;
+    
+            image = snakeLeftImage;
+        } 
+        else if (key == 's' && !movingUp) 
+        {
+            movingUp = false;
+            movingDown = true;
+            movingLeft = false;
+            movingRight = false;
+    
+            image = snakeDownImage;
+        } 
+        else if (key == 'd' && !movingLeft) 
+        {
+            movingUp = false;
+            movingDown = false;
+            movingLeft = false;
+            movingRight = true;
+    
+            image = snakeRightImage;
         }
     }
     @Override

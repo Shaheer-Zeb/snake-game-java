@@ -26,4 +26,9 @@ public class Fruit extends Entity
     {
         g2.drawImage(image, getXPos(), getYPos(), getWidth(), getHeight(), null);
     }
+    public void respawn()
+    {
+        setXPos(random.nextInt(Main.WIDTH - getWidth()));
+        setYPos(random.nextInt(Main.HEIGHT - getHeight()));
+    }
 }

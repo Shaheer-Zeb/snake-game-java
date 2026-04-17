@@ -1,13 +1,21 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Entity;
-
 /**
  *
- * @author hero
+ * @author ShaheerZK
  */
-public class SnakeBodyPart {
-    
+import java.awt.Image;
+
+public class SnakeBodyPart extends Entity
+{
+    enum Direction
+    {
+        horizontal, vertical, bottomLeft, bottomRight, topLeft, topRight;
+    }
+    Direction direction;
+    SnakeBodyPart(int xPos, int yPos, Image image)
+    {
+        super.setXPos(xPos);
+        super.setYPos(yPos);
+        super.image = image;
+    }
 }

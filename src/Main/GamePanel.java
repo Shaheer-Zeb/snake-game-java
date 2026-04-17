@@ -18,7 +18,7 @@ import javax.swing.JPanel;
 
 public class GamePanel extends JPanel implements Runnable
 {
-    public static final int TILESIZE = 40;
+    public static final int IMAGESIZE = 40;
     final int FPS = 60;
     
     Thread gameThread;
@@ -31,8 +31,8 @@ public class GamePanel extends JPanel implements Runnable
     private boolean gameOver;    
     GamePanel()
     {
-        snake = new Snake(this);
         fruit = new Fruit();
+        snake = new Snake(this, fruit);
         
         this.addKeyListener(snake);
         this.setFocusable(true);
@@ -54,7 +54,8 @@ public class GamePanel extends JPanel implements Runnable
         g2.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), null);
         
         g2.setColor(Color.WHITE);
-        g2.drawString("Score " + snake.getScore(), 20, 20);
+        g2.setFont(FontManager.getFont().deriveFont(30f));
+        g2.drawString("Score: " + snake.getScore(), 20, 30);
         
         fruit.draw(g2);
         snake.draw(g2);
@@ -92,7 +93,8 @@ public class GamePanel extends JPanel implements Runnable
                     try 
                     {
                         Thread.sleep(1000 / FPS - deltaTime);
-                    } catch (InterruptedException ex)
+                    } 
+                    catch (InterruptedException ex)
                     {
                         System.getLogger(GamePanel.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
                     }
